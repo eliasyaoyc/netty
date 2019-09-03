@@ -24,17 +24,20 @@ import io.netty.util.internal.UnstableApi;
 public interface EventExecutorChooserFactory {
 
     /**
+     * 创建一个 EventExecutorChooser 对象
      * Returns a new {@link EventExecutorChooser}.
      */
     EventExecutorChooser newChooser(EventExecutor[] executors);
 
     /**
+     * EventExecutor 选择器接口
      * Chooses the next {@link EventExecutor} to use.
      */
     @UnstableApi
     interface EventExecutorChooser {
 
         /**
+         * 选择下一个 EventExecutor 对象
          * Returns the new {@link EventExecutor} to use.
          */
         EventExecutor next();

@@ -96,9 +96,9 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
-                             final SelectorProvider selectorProvider,
-                             final SelectStrategyFactory selectStrategyFactory,
-                             final RejectedExecutionHandler rejectedExecutionHandler) {
+                             final SelectorProvider selectorProvider,  // 创建Java Nio Selector对象
+                             final SelectStrategyFactory selectStrategyFactory, // 选择策略工厂
+                             final RejectedExecutionHandler rejectedExecutionHandler) {  //拒绝执行处理器
         super(nThreads, executor, chooserFactory, selectorProvider, selectStrategyFactory, rejectedExecutionHandler);
     }
 
@@ -114,6 +114,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     /**
      * Sets the percentage of the desired amount of time spent for I/O in the child event loops.  The default value is
      * {@code 50}, which means the event loop will try to spend the same amount of time for I/O as for non-I/O tasks.
+     * 设置所有EventLoop的IO任务执行时间的比例
      */
     public void setIoRatio(int ioRatio) {
         for (EventExecutor e: this) {
@@ -124,6 +125,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     /**
      * Replaces the current {@link Selector}s of the child event loops with newly created {@link Selector}s to work
      * around the  infamous epoll 100% CPU bug.
+     * 重建所有 EventLoop 的 Selector 对象。
      */
     public void rebuildSelectors() {
         for (EventExecutor e: this) {
@@ -131,6 +133,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
         }
     }
 
+    //创建NioEventLoop对象
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {
         EventLoopTaskQueueFactory queueFactory = args.length == 4 ? (EventLoopTaskQueueFactory) args[3] : null;
