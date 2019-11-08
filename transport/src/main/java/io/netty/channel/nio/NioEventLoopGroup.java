@@ -61,6 +61,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor) {
+        // 1默认0   2默认null   3 nio provider
         this(nThreads, executor, SelectorProvider.provider());
     }
 
@@ -70,11 +71,13 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      */
     public NioEventLoopGroup(
             int nThreads, ThreadFactory threadFactory, final SelectorProvider selectorProvider) {
+        //1默认0  2默认null  3 nio provider  4 new DefaultSelectStrategyFactory()单例
         this(nThreads, threadFactory, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
     }
 
     public NioEventLoopGroup(int nThreads, ThreadFactory threadFactory,
         final SelectorProvider selectorProvider, final SelectStrategyFactory selectStrategyFactory) {
+        //1默认0  2默认null  3 nio provider  4 new DefaultSelectStrategyFactory()单例  5默认的拒绝策略，抛出异常
         super(nThreads, threadFactory, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
     }
 

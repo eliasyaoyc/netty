@@ -28,6 +28,7 @@ import static io.netty.util.concurrent.AbstractEventExecutor.*;
 
 /**
  * Abstract base class for {@link EventExecutorGroup} implementations.
+ * 实现 EventExecutorGroup 接口，EventExecutor ( 事件执行器 )的分组抽象类。
  */
 public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
     // submit 方法 提交一个普通任务给EventExecutor
@@ -76,6 +77,7 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
 
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     * 抽象方法 由子类实现
      */
     @Override
     @Deprecated
@@ -114,6 +116,7 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
         return next().invokeAny(tasks, timeout, unit);
     }
 
+    //在EventExecutor 中执行一个普通任务
     @Override
     public void execute(Runnable command) {
         next().execute(command);

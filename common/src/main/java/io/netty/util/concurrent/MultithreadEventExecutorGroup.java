@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
+ * 基于多线程的EventExecutor(事件执行器)的分组抽象类
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
     //EventExecutor 数组
