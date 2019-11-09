@@ -76,7 +76,7 @@ public final class EchoServer {
              });
 
             // Start the server.
-            // 绑定端口，并同步等待成功，即启动服务端
+            // 绑定端口，并同步等待成功，即启动服务端 服务端channel创建的入口
             ChannelFuture f = b.bind(PORT).sync();
 
             // Wait until the server socket is closed.
