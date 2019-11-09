@@ -497,7 +497,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
                         case SelectStrategy.SELECT:
                             // 重置 wakenUp 标记为 false
-                            // 选择( 查询 )任务
+                            // 选择( 查询 )任务  wakenUp是标识当前select操作是否是唤醒状态
+                            // 1.deadline以及任务穿插逻辑处理
+                            // 2.阻塞式select
+                            // 3.避免jdk空轮训bug
                             select(wakenUp.getAndSet(false));
 
                             // 'wakenUp.compareAndSet(false, true)' is always evaluated
@@ -569,10 +572,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     final long ioStartTime = System.nanoTime();
                     try {
                         // 处理 Channel 感兴趣的就绪 IO 事件
+                        // 1.selected keySet优化
+                        // 2.processSelectKeysOptimized
                         processSelectedKeys();
                     } finally {
                         // Ensure we always run tasks.
                         // 运行所有普通任务和定时任务，限制时间  通过processSelectedKeys 执行时间作为基准，计算runAllTasks方法可执行的时间
+                        // 1.任务分类  2.任务的聚合  3.任务的执行
                         final long ioTime = System.nanoTime() - ioStartTime;
                         runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
@@ -922,18 +928,19 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     break;
                 }
 
+                //解决jdk空轮训bug
                 // 记录当前时间
                 long time = System.nanoTime();
-                // 符合 select 超时条件，重置 selectCnt 为 1
+                // 符合 select 超时条件，重置 selectCnt 为 1   当前时间-超时事件 >= 一开始进来的时间  如果没有超时应该是小于当前时间的
                 if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) >= currentTimeNanos) {
                     // timeoutMillis elapsed without anything selected.
                     selectCnt = 1;
-                    // 不符合 select 超时的提交，若 select 次数到达重建 Selector 对象的上限，进行重建
+                // 不符合 select 超时的提交，若 select 次数到达重建 Selector 对象的上限，进行重建
                 } else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 &&
                         selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
                     // The code exists in an extra method to ensure the method is not too big to inline as this
                     // branch is not very likely to get hit very frequently.
-                    selector = selectRebuildSelector(selectCnt);  // 发生 epoll bug 时  重建selector对象
+                    selector = selectRebuildSelector(selectCnt);  // 发生 epoll bug 时  重建selector对象  把旧的selector上的key注册到新的selector上
                     selectCnt = 1;
                     break;
                 }

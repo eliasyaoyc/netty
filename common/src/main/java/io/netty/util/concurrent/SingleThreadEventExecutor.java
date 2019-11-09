@@ -937,7 +937,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 // 更新最后执行时间
                 updateLastExecutionTime();
                 try {
-                    // 执行任务
+                    // 执行任务 启动
+                    // 1.select() 检查是否有io事件
+                    // 2.processSelectedKeys() 处理io事件
+                    // 3.runAllTasks()处理异步任务队列
                     SingleThreadEventExecutor.this.run();
                     success = true;// 标记执行成功
                 } catch (Throwable t) {
