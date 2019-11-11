@@ -49,7 +49,7 @@ public class DefaultSocketChannelConfig extends DefaultChannelConfig
         }
         this.javaSocket = javaSocket;
 
-        // Enable TCP_NODELAY by default if possible.
+        // Enable TCP_NODELAY by default if possible.  禁止Nagle算法
         if (PlatformDependent.canEnableTcpNoDelayByDefault()) {
             try {
                 setTcpNoDelay(true);

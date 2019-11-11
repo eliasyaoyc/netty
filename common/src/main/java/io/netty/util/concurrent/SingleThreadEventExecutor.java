@@ -353,7 +353,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (isShutdown()) {
             reject();
         }
-        // 添加任务到队列
+        // 添加任务到队列   taskQueue 是一个 MpscQueue  在EventLoop的时候会创建这个queue
         return taskQueue.offer(task);
     }
 

@@ -167,6 +167,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                     pipeline.addLast(handler);
                 }
 
+                //pipeline传播  Head -> ServerBootstrapAcceptor -> Tail
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {

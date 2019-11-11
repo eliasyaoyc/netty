@@ -722,6 +722,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    //根据selectionKey 选择不同的处理方式
+    // op_write 进行连接
+    // op_write 调用forceFlush方法向channel写数据
+    // op_read  调用read()方法从channel读取数据
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         // 如果 SelectionKey 是不合法的，则关闭 Channel
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
