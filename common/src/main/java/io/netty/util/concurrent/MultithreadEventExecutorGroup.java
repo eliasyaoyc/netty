@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  * 基于多线程的EventExecutor(事件执行器)的分组抽象类
- * 每次执行任务都会创建一个线程实体 (FastThreadLocalThread)
- * NioEventLoop线程命名规则nioEventLoop-1-xx
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
     //EventExecutor 数组
@@ -67,7 +65,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
     /**
      * Create a new instance.
-     *
+     * NioEventLoopGroup真正的构造方法
      * @param nThreads          the number of threads that will be used by this instance.
      * @param executor          the Executor to use, or {@code null} if the default should be used.
      * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
@@ -80,7 +78,9 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
         // 创建执行器
         if (executor == null) {
-            //newDefaultThreadFactory()创建线程工厂对象
+            // newDefaultThreadFactory()创建线程工厂对象
+            // 每次执行任务都会创建一个线程实体 (FastThreadLocalThread)
+            // NioEventLoop线程命名规则nioEventLoop-1-xx
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
         // 创建 EventExecutor 数组
