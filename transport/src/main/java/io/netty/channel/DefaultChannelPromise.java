@@ -44,7 +44,9 @@ public class DefaultChannelPromise extends DefaultPromise<Void> implements Chann
 
     /**
      * Creates a new instance.
-     *
+     * promise 类似 future，集成jdk的Future
+     * JDK 的 Future 虽然是异步的，但仍需要 get 方法 阻塞获取结果才能坐之后的事情，
+     * 而 Promise 可以通过设置监听器的方式，在方法执行成功或者失败的情况下无需等待，就能执行监听器中的任务，效率币 Future 高很多。
      * @param channel
      *        the {@link Channel} associated with this future
      */

@@ -470,7 +470,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 register0(promise);
             } else {
                 try {
-                    eventLoop.execute(new Runnable() {
+                    eventLoop.execute(new Runnable() {// 开始真正的异步，boss 线程开始启动
                         @Override
                         public void run() {
                             register0(promise);
@@ -549,6 +549,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             boolean wasActive = isActive();
             try {
+                //执行成功后，执行通道的fireChannelActive方法，告诉所有的handler 已经绑定成
                 doBind(localAddress);
             } catch (Throwable t) {
                 safeSetFailure(promise, t);
@@ -565,6 +566,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 });
             }
 
+            //最后一步   告诉promise 任务成功，可以执行监听器的方法了。虽然这个 promise 没有任何监听方法。
             safeSetSuccess(promise);
         }
 

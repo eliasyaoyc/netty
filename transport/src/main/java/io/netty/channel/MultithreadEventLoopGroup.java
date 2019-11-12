@@ -91,6 +91,8 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
     //注册Channel 到EventLoop中  实际上，EventLoopGroup 会分配一个 EventLoop 给该 Channel 注册
     @Override
     public ChannelFuture register(Channel channel) {
+        //拿到单例线程池后 调用register方法进行注册
+        //需要任务队列，有很多任务需要进行调度，所以需要线程池的特性。但为了多线程的切换导致的性能损耗和为了消除同步，所以使用单个线程。
         return next().register(channel);
     }
 
