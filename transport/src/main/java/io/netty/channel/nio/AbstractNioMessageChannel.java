@@ -72,6 +72,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        //作用是通过 ServerSocket 的 accept 方法获取到 Tcp 连接，然后封装成 Netty 的 NioSocketChannel 对象。最后添加到 容器中。
                         int localRead = doReadMessages(readBuf);
                         if (localRead == 0) {
                             break;
@@ -90,6 +91,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 int size = readBuf.size();
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
+                    //开始执行管道中handler的channelRead方法
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
                 readBuf.clear();
