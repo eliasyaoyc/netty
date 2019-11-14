@@ -466,6 +466,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             AbstractChannel.this.eventLoop = eventLoop;
 
+            //判断是否在eventLoop线程中。 Netty模型高性能取决于对当前执行线程Thread的身份确定，
+            //如果不在当前线程，那么需要同步措施(枷锁),上下文切换比较耗费性能
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {

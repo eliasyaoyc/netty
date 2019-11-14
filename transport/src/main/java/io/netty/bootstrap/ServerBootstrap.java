@@ -145,6 +145,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             }
         }
 
+        //这个channel就是NioServerSocketChannel 在初始化的时候已经创建好了pipeline(DefaultChannelPipeline)
         ChannelPipeline p = channel.pipeline();
 
         final EventLoopGroup currentChildGroup = childGroup;
@@ -159,6 +160,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         }
 
         //pipeline 是一个双向链表，初始化了head 和 tail，这里调用addLast 方法，将整个handler 插入到tail的前面。
+        //在调用pipeline.addLast方法把handler加入的时候会创建一个AbstractChannelHandlerContext对象  他是pipeline和handler之间的联系
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) throws Exception {
