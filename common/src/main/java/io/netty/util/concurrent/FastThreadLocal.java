@@ -94,17 +94,23 @@ public class FastThreadLocal<V> {
         InternalThreadLocalMap.destroy();
     }
 
+    // 此方法的目的是将FastThreadLocal对象保存到一个set中，因为netty的map是一个32长度的数组，所以每次新增值的时候，保存到一个set中
+    // 这样就可以判断是否set过这个map
     @SuppressWarnings("unchecked")
     private static void addToVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<?> variable) {
+        // 该变量是 static final 的，因此通常是 0
         Object v = threadLocalMap.indexedVariable(variablesToRemoveIndex);
         Set<FastThreadLocal<?>> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null) {
+            // 创建一个基于 IdentityHashMap 的 Set，泛型是 FastThreadLocal
             variablesToRemove = Collections.newSetFromMap(new IdentityHashMap<FastThreadLocal<?>, Boolean>());
+            // 将这个 Set 放到这个 Map 数组的下标 0 处
             threadLocalMap.setIndexedVariable(variablesToRemoveIndex, variablesToRemove);
         } else {
+            // 如果拿到的不是 UNSET ，说明这是第二次操作了，因此可以强转为 Set
             variablesToRemove = (Set<FastThreadLocal<?>>) v;
         }
-
+        // 最后的目的就是将 FastThreadLocal 放置到 Set 中
         variablesToRemove.add(variable);
     }
 
@@ -188,8 +194,11 @@ public class FastThreadLocal<V> {
      * Set the value for the current thread.
      */
     public final void set(V value) {
+        //判断value是不是缺省值，如果是，则调用remove方法
         if (value != InternalThreadLocalMap.UNSET) {
+            //获取当前InternalThreadLocalMap
             InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
+            //1.首先会通过index 把旧的value 替换成 新的value  然后把旧的value设置成缺省
             setKnownNotUnset(threadLocalMap, value);
         } else {
             remove();
@@ -247,12 +256,14 @@ public class FastThreadLocal<V> {
         if (threadLocalMap == null) {
             return;
         }
-
+        // 删除并返回 Map 数组中当前 ThreadLocal index 对应的 value
         Object v = threadLocalMap.removeIndexedVariable(index);
+        // 从 Map 数组下标 0 的位置取出 Set ，并删除当前的 ThreadLocal
         removeFromVariablesToRemove(threadLocalMap, this);
 
         if (v != InternalThreadLocalMap.UNSET) {
             try {
+                // 默认啥也不做，用户可以继承 FastThreadLocal 重定义这个方法。
                 onRemoval((V) v);
             } catch (Exception e) {
                 PlatformDependent.throwException(e);
