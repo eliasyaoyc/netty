@@ -782,6 +782,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // to a spin loop
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                 unsafe.read();
+                logger.error("OP_ACCEPT || OP_READ" + readyOps);
             }
         } catch (CancelledKeyException ignored) {
             unsafe.close(unsafe.voidPromise());
