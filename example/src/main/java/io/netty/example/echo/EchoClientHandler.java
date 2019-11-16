@@ -19,6 +19,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Handler implementation for the echo client.  It initiates the ping-pong
@@ -26,6 +30,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * the server.
  */
 public class EchoClientHandler extends ChannelInboundHandlerAdapter {
+
+    private Logger logger = LoggerFactory.getLogger(EchoClientHandler.class);
 
     private final ByteBuf firstMessage;
 
@@ -39,14 +45,29 @@ public class EchoClientHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        ctx.writeAndFlush(firstMessage);
-    }
+//    @Override
+//    public void channelActive(ChannelHandlerContext ctx) {
+//        ctx.writeAndFlush(firstMessage);
+//    }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ctx.write(msg);
+    public void channelActive(ChannelHandlerContext ctx) {
+        ctx.writeAndFlush(Unpooled.copiedBuffer(("Hello I am Client").getBytes()));
+    }
+
+//    @Override
+//    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+//        ctx.write(msg);
+//    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws UnsupportedEncodingException {
+        //解码客户端发来的数据并打印
+        ByteBuf buf = (ByteBuf) msg;
+        byte[] req = new byte[buf.readableBytes()];
+        buf.readBytes(req);
+        String body = new String(req,"UTF-8");;
+        System.err.println(body);
     }
 
     @Override

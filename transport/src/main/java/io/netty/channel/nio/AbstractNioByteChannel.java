@@ -136,22 +136,25 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 return;
             }
             final ChannelPipeline pipeline = pipeline();
+            // 用来处理内存的分配:池化或者非池化 UnpooledByteBufAllocator
             final ByteBufAllocator allocator = config.getAllocator();
+            // 用来计算此次读循环应该分配多少内存 AdaptiveRecvByteBufAllocator 自适应计算缓冲分配
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
-            allocHandle.reset(config);
+            allocHandle.reset(config);// 重置为0
 
             ByteBuf byteBuf = null;
             boolean close = false;
             try {
                 do {
-                    //读取数据到容器
+                    //使用内存分配器获取数据容器--byteBuf
                     byteBuf = allocHandle.allocate(allocator);
+                    //调用doReadBytes方法把数据读取到容器中
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
-                    if (allocHandle.lastBytesRead() <= 0) {
+                    if (allocHandle.lastBytesRead() <= 0) {// 如果上一次读到的字节数小于等于0，清理引用和跳出循环
                         // nothing was read. release the buffer.
-                        byteBuf.release();
+                        byteBuf.release();// 引用 -1
                         byteBuf = null;
-                        close = allocHandle.lastBytesRead() < 0;
+                        close = allocHandle.lastBytesRead() < 0;// 如果远程已经关闭连接
                         if (close) {
                             // There is nothing left to read as we received an EOF.
                             readPending = false;

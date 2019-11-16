@@ -67,11 +67,18 @@ public final class EchoServer {
                  public void initChannel(SocketChannel ch) throws Exception {
                      // 设置连入服务端的 Client 的 SocketChannel 的处理器
                      ChannelPipeline p = ch.pipeline();
-                     if (sslCtx != null) {
-                         p.addLast(sslCtx.newHandler(ch.alloc()));
-                     }
+                     p.addLast(new InBoundHandlerA());
+                     p.addLast(new InBoundHandlerB());
+                     p.addLast(new InBoundHandlerC());
+                     p.addLast(new OutBoundHandlerA());
+                     p.addLast(new OutBoundHandlerB());
+                     p.addLast(new OutBoundHandlerC());
+//                     if (sslCtx != null) {
+//                         p.addLast(sslCtx.newHandler(ch.alloc()));
+//                     }
                      //p.addLast(new LoggingHandler(LogLevel.INFO));
-                     p.addLast(serverHandler);
+//                     p.addLast(serverHandler);
+//                     p.addLast(new EchoOutServerHandler());
                  }
              });
 
