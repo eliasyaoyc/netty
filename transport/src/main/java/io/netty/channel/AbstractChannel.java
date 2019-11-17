@@ -873,6 +873,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             int size;
             try {
+                //把msg变成DirectBuffer
                 msg = filterOutboundMessage(msg);
                 size = pipeline.estimatorHandle().size(msg);
                 if (size < 0) {
@@ -883,7 +884,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 ReferenceCountUtil.release(msg);
                 return;
             }
-
+            //堆外内存插入写队列(outboundBuffer)
             outboundBuffer.addMessage(msg, size, promise);
         }
 
@@ -895,7 +896,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             if (outboundBuffer == null) {
                 return;
             }
-
+            //添加刷新状态并设置写状态
             outboundBuffer.addFlush();
             flush0();
         }

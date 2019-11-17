@@ -124,6 +124,7 @@ public final class ChannelOutboundBuffer {
 
         // increment pending bytes after adding message to the unflushed arrays.
         // See https://github.com/netty/netty/issues/1619
+        //设置写状态
         incrementPendingOutboundBytes(entry.pendingSize, false);
     }
 

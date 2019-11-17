@@ -52,7 +52,11 @@ public class EchoClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
+        // 1.从tail节点开始往前传播
+        // 2.逐个调用channelHandler的write方法
+        // 3.逐个调用channelHandler的flush方法
         ctx.writeAndFlush(Unpooled.copiedBuffer(("Hello I am Client").getBytes()));
+        ctx.channel().writeAndFlush("asasa");
     }
 
 //    @Override
