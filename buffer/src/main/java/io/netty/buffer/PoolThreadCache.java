@@ -163,6 +163,7 @@ final class PoolThreadCache {
      * Try to allocate a tiny buffer out of the cache. Returns {@code true} if successful {@code false} otherwise
      */
     boolean allocateTiny(PoolArena<?> area, PooledByteBuf<?> buf, int reqCapacity, int normCapacity) {
+        // 1.调用cacheForTiny()找到对应size的memoryRegionCache
         return allocate(cacheForTiny(area, normCapacity), buf, reqCapacity);
     }
 
@@ -366,6 +367,7 @@ final class PoolThreadCache {
         }
     }
 
+    //poolThreadCache中的缓存
     private abstract static class MemoryRegionCache<T> {
         private final int size;
         private final Queue<Entry<T>> queue;
@@ -403,11 +405,14 @@ final class PoolThreadCache {
          * Allocate something out of the cache if possible and remove the entry from the cache.
          */
         public final boolean allocate(PooledByteBuf<T> buf, int reqCapacity) {
+            // 2.从queue中弹出一个entry给ByteBuf初始化
             Entry<T> entry = queue.poll();
             if (entry == null) {
                 return false;
             }
+            //初始化
             initBuf(entry.chunk, entry.nioBuffer, entry.handle, buf, reqCapacity);
+            //返回对象池复用
             entry.recycle();
 
             // allocations is not thread-safe which is fine as this is only called from the same thread all time.

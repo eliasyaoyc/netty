@@ -227,6 +227,10 @@ final class PoolChunk<T> implements PoolChunkMetric {
         if ((normCapacity & subpageOverflowMask) != 0) { // >= pageSize
             handle =  allocateRun(normCapacity);
         } else {
+            //subpage级别内存分配
+            // 1.定位一个subpage对象
+            // 2.初始化subpage
+            // 3.初始化pooledByteBuf
             handle = allocateSubpage(normCapacity);
         }
 

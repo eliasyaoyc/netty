@@ -27,18 +27,47 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
+//对象池化的ByteBuf 抽象基类，为基于对象池的ByteBuf 实现类。提供公共方法
 abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
-
+    /**
+     * Recycler 处理器，用于回收对象
+     */
     private final Recycler.Handle<PooledByteBuf<T>> recyclerHandle;
-
+    /**
+     * Chunk 对象
+     */
     protected PoolChunk<T> chunk;
+    /**
+     * 从 Chunk 对象中分配的内存块所处的位置
+     */
     protected long handle;
+    /**
+     * 内存空间。具体什么样的数据，通过子类设置泛型。
+     */
     protected T memory;
+    /**
+     * {@link #memory} 开始位置
+     * @see #idx(int)
+     */
     protected int offset;
+    /**
+     * 容量
+     * @see #capacity()
+     */
     protected int length;
+    /**
+     * 占用 {@link #memory} 的大小
+     */
     int maxLength;
     PoolThreadCache cache;
+    /**
+     * 临时 ByteBuff 对象
+     * @see #internalNioBuffer()
+     */
     ByteBuffer tmpNioBuf;
+    /**
+     * ByteBuf 分配器
+     */
     private ByteBufAllocator allocator;
 
     @SuppressWarnings("unchecked")
@@ -56,15 +85,18 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
         init0(chunk, null, 0, chunk.offset, length, length, null);
     }
 
+    //初始化 PooledByteBuf 对象
     private void init0(PoolChunk<T> chunk, ByteBuffer nioBuffer,
                        long handle, int offset, int length, int maxLength, PoolThreadCache cache) {
         assert handle >= 0;
         assert chunk != null;
 
+        // From PoolChunk 对象
         this.chunk = chunk;
         memory = chunk.memory;
         tmpNioBuf = nioBuffer;
         allocator = chunk.arena.parent;
+        // 其他
         this.cache = cache;
         this.handle = handle;
         this.offset = offset;
@@ -74,11 +106,16 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 
     /**
      * Method must be called before reuse this {@link PooledByteBufAllocator}
+     * 复用PooledByeBuf对象
      */
     final void reuse(int maxCapacity) {
+        //设置最大容量
         maxCapacity(maxCapacity);
+        //设置引用数量为0
         resetRefCnt();
+        //重置读写索引为0
         setIndex0(0, 0);
+        //重置读写标记位为0
         discardMarks();
     }
 
@@ -92,30 +129,37 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
         return Math.min(maxLength, maxCapacity()) - writerIndex;
     }
 
+    //调整容量大小
     @Override
     public final ByteBuf capacity(int newCapacity) {
+        //校验新的容量，不能超过最大容量
         if (newCapacity == length) {
             ensureAccessible();
             return this;
         }
         checkNewCapacity(newCapacity);
+        //Chunk 内存   非池化
         if (!chunk.unpooled) {
+            // 扩容
             // If the request capacity does not require reallocation, just update the length of the memory.
             if (newCapacity > length) {
                 if (newCapacity <= maxLength) {
                     length = newCapacity;
                     return this;
                 }
+                // 缩容   大于 maxLength 的一半  Netty SubPage 最小是 16 ，如果小于等 16 ，无法缩容。
             } else if (newCapacity > maxLength >>> 1 &&
                     (maxLength > 512 || newCapacity > maxLength - 16)) {
                 // here newCapacity < length
                 length = newCapacity;
+                // 设置读写索引，避免超过最大容量
                 setIndex(Math.min(readerIndex(), newCapacity), Math.min(writerIndex(), newCapacity));
                 return this;
             }
         }
 
         // Reallocation required.
+        // 重新分配新的内存空间，并将数据复制到其中。并且，释放老的内存空间。
         chunk.arena.reallocate(this, newCapacity, true);
         return this;
     }
