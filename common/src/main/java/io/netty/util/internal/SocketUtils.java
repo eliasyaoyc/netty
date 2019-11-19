@@ -107,7 +107,8 @@ public final class SocketUtils {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<SocketChannel>() {
                 @Override
                 public SocketChannel run() throws IOException {
-                    //调用serverSocketChannel.accept()方法，返回一个nio通道。这个通道就是我们刚刚boss线程监听到的accept事件相当于一个tcp连接
+                    //调用serverSocketChannel.accept()方法，返回一个nio通道。
+                    // 这个通道就是我们刚刚boss线程监听到的accept事件相当于一个tcp连接
                     return serverSocketChannel.accept();
                 }
             });
