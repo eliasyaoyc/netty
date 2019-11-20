@@ -136,7 +136,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 return;
             }
             final ChannelPipeline pipeline = pipeline();
-            // 用来处理内存的分配:池化或者非池化 UnpooledByteBufAllocator
+            // 用来处理内存的分配:池化或者非池化 pooledByteBufAllocator
             final ByteBufAllocator allocator = config.getAllocator();
             // 用来计算此次读循环应该分配多少内存 AdaptiveRecvByteBufAllocator 自适应计算缓冲分配
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();

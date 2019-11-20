@@ -13,7 +13,7 @@ public class InBoundHandlerB extends ChannelInboundHandlerAdapter {
         System.out.println("InBoundHandlerB ：" + msg);
         ctx.fireChannelRead(msg);
         //测试异常捕捉
-        throw new Exception("Test CaughtException");
+//        throw new Exception("Test CaughtException");
     }
 
     @Override
