@@ -44,11 +44,12 @@ final class PoolThreadCache {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PoolThreadCache.class);
     /**
-     * 对应的 Heap PoolArena 对象
+     * 对应的 Heap PoolArena 对象   开辟一块连续内存
      */
     final PoolArena<byte[]> heapArena;
     final PoolArena<ByteBuffer> directArena;
 
+    //缓存一块连续内存
     // Hold the caches for the different size classes, which are tiny, small and normal.
     private final MemoryRegionCache<byte[]>[] tinySubPageHeapCaches;
     private final MemoryRegionCache<byte[]>[] smallSubPageHeapCaches;
@@ -373,8 +374,11 @@ final class PoolThreadCache {
 
     //poolThreadCache中的缓存
     private abstract static class MemoryRegionCache<T> {
+        //同一个size的有多少byteBuf可以重复利用
         private final int size;
+        //存储不同规格大小的byteBuf
         private final Queue<Entry<T>> queue;
+        //Ting Small Normal
         private final SizeClass sizeClass;
         private int allocations;
 
