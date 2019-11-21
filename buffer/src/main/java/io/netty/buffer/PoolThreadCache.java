@@ -37,11 +37,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * technics of
  * <a href="https://www.facebook.com/notes/facebook-engineering/scalable-memory-allocation-using-jemalloc/480222803919">
  * Scalable memory allocation using jemalloc</a>.
+ *
+ * Netty 对 Jemalloc tcache 的实现类，内存分配的线程缓存。
  */
 final class PoolThreadCache {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PoolThreadCache.class);
-
+    /**
+     * 对应的 Heap PoolArena 对象
+     */
     final PoolArena<byte[]> heapArena;
     final PoolArena<ByteBuffer> directArena;
 
