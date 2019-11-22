@@ -216,7 +216,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
         maxSubpageAllocs = 1 << maxOrder;
 
         // 初始化 memoryMap 和 depthMap
-        // Generate the memory map.
+        // Generate the memory map.  初始化两个 4096长度的数组
         memoryMap = new byte[maxSubpageAllocs << 1];
         depthMap = new byte[memoryMap.length];
         int memoryMapIndex = 1;
@@ -400,7 +400,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
         byte value = value(id);
         assert value == d && (id & initial) == 1 << d : String.format("val = %d, id & initial = %d, d = %d",
                 value, id & initial, d);
-        // 更新获得的节点不可用
+        // 更新获得的节点不可用   memoryMap[id] = val 把memory层级变成12就表示已分配
         setValue(id, unusable); // mark as unusable
         // 更新获得的节点的祖先都不可用
         updateParentsAlloc(id);

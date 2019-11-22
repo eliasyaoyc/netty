@@ -336,6 +336,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
 
         // Add a new chunk.  创建chunk进行分配
         PoolChunk<T> c = newChunk(pageSize, maxOrder, pageShifts, chunkSize);
+        //在chunk上分配一个内存
         boolean success = c.allocate(buf, reqCapacity, normCapacity);
         assert success;
         //初始化
