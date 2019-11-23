@@ -22,7 +22,7 @@ public class OutBoundHandlerB extends ChannelOutboundHandlerAdapter {
         ctx.executor().schedule(new Runnable() {
             @Override
             public void run() {
-                ctx.channel().write("Hello World");
+                ctx.channel().writeAndFlush("Hello World");
             }
         },3, TimeUnit.SECONDS);
     }

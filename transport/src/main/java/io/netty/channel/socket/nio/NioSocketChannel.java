@@ -97,8 +97,8 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     /**
      * Create a new instance
      *
-     * @param parent    the {@link Channel} which created this instance or {@code null} if it was created by the user
-     * @param socket    the {@link SocketChannel} which will be used
+     * @param parent the {@link Channel} which created this instance or {@code null} if it was created by the user
+     * @param socket the {@link SocketChannel} which will be used
      */
     public NioSocketChannel(Channel parent, SocketChannel socket) {
         //调用父类构造函数
@@ -263,6 +263,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
             promise.setSuccess();
         }
     }
+
     private void shutdownInput0(final ChannelPromise promise) {
         try {
             shutdownInput0();
@@ -344,7 +345,9 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
     @Override
     protected int doReadBytes(ByteBuf byteBuf) throws Exception {
+        //获得一个内存预估值
         final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
+        //设置attemptedBytesRead属性为ByteBuf的可写字节数
         allocHandle.attemptedBytesRead(byteBuf.writableBytes());
         return byteBuf.writeBytes(javaChannel(), allocHandle.attemptedBytesRead());
     }
@@ -376,7 +379,9 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
+        //拿到jdk Nio Socket
         SocketChannel ch = javaChannel();
+        // 获取自旋的次数，默认16
         int writeSpinCount = config().getWriteSpinCount();
         do {
             if (in.isEmpty()) {
@@ -387,8 +392,11 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
             }
 
             // Ensure the pending writes are made of ByteBufs only.
+            // 获取设置的每个 ByteBuf 的最大字节数，这个数字来自操作系统的 so_sndbuf 定义
             int maxBytesPerGatheringWrite = ((NioSocketChannelConfig) config).getMaxBytesPerGatheringWrite();
+            // 调用 ChannelOutboundBuffer 的 nioBuffers 方法获取 ByteBuffer 数组，从flushedEntry开始，循环获取
             ByteBuffer[] nioBuffers = in.nioBuffers(1024, maxBytesPerGatheringWrite);
+            // ByteBuffer 的数量
             int nioBufferCnt = in.nioBufferCount();
 
             // Always us nioBuffers() to workaround data-corruption.
@@ -404,13 +412,17 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                     // to check if the total size of all the buffers is non-zero.
                     ByteBuffer buffer = nioBuffers[0];
                     int attemptedBytes = buffer.remaining();
+                    // 使用 NIO 写入 Socket
                     final int localWrittenBytes = ch.write(buffer);
                     if (localWrittenBytes <= 0) {
                         incompleteWrite(true);
                         return;
                     }
+                    // 调整最大字节数
                     adjustMaxBytesPerGatheringWrite(attemptedBytes, localWrittenBytes, maxBytesPerGatheringWrite);
+                    // 删除 ChannelOutboundBuffer 中的 Entry
                     in.removeBytes(localWrittenBytes);
+                    // 自旋减一，直到自旋小于0停止循环，当然如果 ChannelOutboundBuffer 空了，也会停止。
                     --writeSpinCount;
                     break;
                 }
@@ -433,7 +445,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                 }
             }
         } while (writeSpinCount > 0);
-
+        // 如果自旋16次还没有完成 flush，则创建一个任务放进mpsc 队列中执行。
         incompleteWrite(writeSpinCount < 0);
     }
 
@@ -465,6 +477,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
     private final class NioSocketChannelConfig extends DefaultSocketChannelConfig {
         private volatile int maxBytesPerGatheringWrite = Integer.MAX_VALUE;
+
         private NioSocketChannelConfig(NioSocketChannel channel, Socket javaSocket) {
             super(channel, javaSocket);
             calculateMaxBytesPerGatheringWrite();

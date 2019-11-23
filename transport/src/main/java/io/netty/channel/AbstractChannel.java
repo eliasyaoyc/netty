@@ -873,7 +873,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             int size;
             try {
-                //把msg变成DirectBuffer
+                //如果是直接内存的话 直接返回。反之调用newDirectBuffer方法重新包装成直接内存
                 msg = filterOutboundMessage(msg);
                 size = pipeline.estimatorHandle().size(msg);
                 if (size < 0) {
@@ -884,7 +884,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 ReferenceCountUtil.release(msg);
                 return;
             }
-            //堆外内存插入写队列(outboundBuffer)
+            //堆外内存插入写队列(outboundBuffer) 放入出站缓存中
             outboundBuffer.addMessage(msg, size, promise);
         }
 
@@ -896,8 +896,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             if (outboundBuffer == null) {
                 return;
             }
-            //添加刷新状态并设置写状态
+            //添加刷新状态并设置写状态  将 unflushedEntry 的引用转移到 flushedEntry 引用中，表示即将刷新这个 flushedEntry
             outboundBuffer.addFlush();
+            //真正的从outboundBuffer缓存刷新到socket中
             flush0();
         }
 

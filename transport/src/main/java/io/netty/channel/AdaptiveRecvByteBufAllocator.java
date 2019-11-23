@@ -104,6 +104,7 @@ public class AdaptiveRecvByteBufAllocator extends DefaultMaxMessagesRecvByteBufA
             nextReceiveBufferSize = SIZE_TABLE[index];
         }
 
+        //调整下一个次内存分配的大小
         @Override
         public void lastBytesRead(int bytes) {
             // If we read as much as we asked for we should check if we need to ramp up the size of our next guess.
@@ -111,6 +112,7 @@ public class AdaptiveRecvByteBufAllocator extends DefaultMaxMessagesRecvByteBufA
             // the selector to check for more data. Going back to the selector can add significant latency for large
             // data transfers.
             if (bytes == attemptedBytesRead()) {
+                //当获得的字节数和预估的一样大  则需要扩容
                 record(bytes);
             }
             super.lastBytesRead(bytes);

@@ -74,10 +74,13 @@ public final class ChannelOutboundBuffer {
     // Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
     //
     // The Entry that is the first in the linked-list structure that was flushed
+    // 即将被消费的开始节点
     private Entry flushedEntry;
     // The Entry which is the first unflushed in the linked-list structure
+    // 被添加的开始节点，但没有准备好被消费
     private Entry unflushedEntry;
     // The Entry which represents the tail of the buffer
+    // 最后一个节点
     private Entry tailEntry;
     // The number of flushed entries that are not written yet
     private int flushed;
@@ -108,9 +111,12 @@ public final class ChannelOutboundBuffer {
     /**
      * Add given message to this {@link ChannelOutboundBuffer}. The given {@link ChannelPromise} will be notified once
      * the message was written.
+     * 将给定的消息加到ChannelOutboundBuffer，一旦消息被成功写入，就会通知promise
      */
     public void addMessage(Object msg, int size, ChannelPromise promise) {
+        //根据byteBuf 和promise 创建一个entry节点
         Entry entry = Entry.newInstance(msg, size, total(msg), promise);
+        //将entry追加到tailEntry上。
         if (tailEntry == null) {
             flushedEntry = null;
         } else {
@@ -124,7 +130,9 @@ public final class ChannelOutboundBuffer {
 
         // increment pending bytes after adding message to the unflushed arrays.
         // See https://github.com/netty/netty/issues/1619
-        //设置写状态
+        // 设置写状态 会设置totalPendingSize的大小是否超过了高水位阀值(默认64kb) 如果超过 关闭写开关，调用pipeline.fireChannelWritabilityChanged改变flush策略
+        // 如果对方 Socket 接收很慢，ChannelOutboundBuffer 就会积累很多的数据。
+        // 并且这个 ChannelOutboundBuffer 是没有大小限制的链表。可能会导致 OOM
         incrementPendingOutboundBytes(entry.pendingSize, false);
     }
 
@@ -172,6 +180,7 @@ public final class ChannelOutboundBuffer {
         }
 
         long newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(this, size);
+        //大于了高水位阀值
         if (newWriteBufferSize > channel.config().getWriteBufferHighWaterMark()) {
             setUnwritable(invokeLater);
         }
@@ -822,6 +831,7 @@ public final class ChannelOutboundBuffer {
             this.handle = handle;
         }
 
+        //创建entry节点
         static Entry newInstance(Object msg, int size, long total, ChannelPromise promise) {
             Entry entry = RECYCLER.get();
             entry.msg = msg;

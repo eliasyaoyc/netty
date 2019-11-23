@@ -1136,6 +1136,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public int writeBytes(ScatteringByteChannel in, int length) throws IOException {
+        //对长度进行校验，确保可写长度大于0
         ensureWritable(length);
         int writtenBytes = setBytes(writerIndex, in, length);
         if (writtenBytes > 0) {

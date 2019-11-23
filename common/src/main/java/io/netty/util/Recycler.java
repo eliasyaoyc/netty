@@ -157,7 +157,9 @@ public abstract class Recycler<T> {
         if (maxCapacityPerThread == 0) {
             return newObject((Handle<T>) NOOP_HANDLE);
         }
+        //先fastThreadLocal中的InternalThreadLocalMap中存储了一个stack(栈)对象(entry对象)
         Stack<T> stack = threadLocal.get();
+        //从stack中弹出  每次用换都设置为null 重复利用
         DefaultHandle<T> handle = stack.pop();
         if (handle == null) {
             handle = stack.newHandle();
