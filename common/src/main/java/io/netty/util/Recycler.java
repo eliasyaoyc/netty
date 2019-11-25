@@ -152,6 +152,7 @@ public abstract class Recycler<T> {
         }
     }
 
+    //从threadLocal 中取出stack 中首个T 实例
     @SuppressWarnings("unchecked")
     public final T get() {
         if (maxCapacityPerThread == 0) {
@@ -159,7 +160,7 @@ public abstract class Recycler<T> {
         }
         //先fastThreadLocal中的InternalThreadLocalMap中存储了一个stack(栈)对象(entry对象)
         Stack<T> stack = threadLocal.get();
-        //从stack中弹出  每次用换都设置为null 重复利用
+        //从stack中弹出  每次用完都设置为null 重复利用
         DefaultHandle<T> handle = stack.pop();
         if (handle == null) {
             handle = stack.newHandle();
@@ -194,8 +195,10 @@ public abstract class Recycler<T> {
         return threadLocal.get().size;
     }
 
+    //当stack中没有实例的时候，创建一个实例对象
     protected abstract T newObject(Handle<T> handle);
 
+    //回收实例
     public interface Handle<T> {
         void recycle(T object);
     }
@@ -507,8 +510,10 @@ public abstract class Recycler<T> {
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         DefaultHandle<T> pop() {
+            //拿到这个 Stack 的长度，实际上，这个 Stack 就是一个 DefaultHandle 数组。
             int size = this.size;
             if (size == 0) {
+                //如果这个长度是 0，没有元素了，就调用 scavenge 方法尝试从 queue 中转移一些数据到 stack 中。scavenge 方法待会详细再讲。
                 if (!scavenge()) {
                     return null;
                 }
@@ -520,6 +525,7 @@ public abstract class Recycler<T> {
             if (ret.lastRecycledId != ret.recycleId) {
                 throw new IllegalStateException("recycled multiple times");
             }
+            //重置 size 属性和其余两个属性。返回实例。
             ret.recycleId = 0;
             ret.lastRecycledId = 0;
             this.size = size;
@@ -608,15 +614,18 @@ public abstract class Recycler<T> {
             item.recycleId = item.lastRecycledId = OWN_THREAD_ID;
 
             int size = this.size;
+            //如果 Stack 大小已经大于等于最大容量或者这个 handle 在容器里了，就不做回收了。
             if (size >= maxCapacity || dropHandle(item)) {
                 // Hit the maximum capacity or should drop - drop the possibly youngest object.
                 return;
             }
+            //如果数组满了，扩容一倍，最大 4096（默认）。
             if (size == elements.length) {
                 elements = Arrays.copyOf(elements, min(size << 1, maxCapacity));
             }
 
             elements[size] = item;
+            //size + 1。
             this.size = size + 1;
         }
 
@@ -624,15 +633,19 @@ public abstract class Recycler<T> {
             // we don't want to have a ref to the queue as the value in our weak map
             // so we null it out; to ensure there are no races with restoring it later
             // we impose a memory ordering here (no-op on x86)
+            // 每个 Stack 对应一串 queue，找到当前线程的 map
             Map<Stack<?>, WeakOrderQueue> delayedRecycled = DELAYED_RECYCLED.get();
+            // 查看当前线程中是否含有这个 Stack 对应的队列
             WeakOrderQueue queue = delayedRecycled.get(this);
             if (queue == null) {
+                // 如果 map 长度已经大于最大延迟数了，则向 map 中添加一个假的队列
                 if (delayedRecycled.size() >= maxDelayedQueues) {
                     // Add a dummy queue so we know we should drop the object
                     delayedRecycled.put(this, WeakOrderQueue.DUMMY);
                     return;
                 }
                 // Check if we already reached the maximum number of delayed queues and if we can allocate at all.
+                // 如果长度不大于最大延迟数，则尝试创建一个queue，链接到这个 Stack 的 head 节点前（内部创建Link）
                 if ((queue = WeakOrderQueue.allocate(this, thread)) == null) {
                     // drop object
                     return;
@@ -647,13 +660,19 @@ public abstract class Recycler<T> {
         }
 
         boolean dropHandle(DefaultHandle<?> handle) {
+            // 没有被回收过
             if (!handle.hasBeenRecycled) {
+                // 第一次是 -1，++ 之后变为0，取余7。其实如果正常情况下，结果应该都是0。
+                // 如果下面的判断不是0 的话，那么已经归还。这个对象就没有必要重复归还。
+                // 直接丢弃。
                 if ((++handleRecycleCount & ratioMask) != 0) {
                     // Drop the object.
                     return true;
                 }
+                // 改为被回收过，下次就不会进入了
                 handle.hasBeenRecycled = true;
             }
+            // 删除失败
             return false;
         }
 
