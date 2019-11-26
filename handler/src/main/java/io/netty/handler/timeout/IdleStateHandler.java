@@ -316,10 +316,12 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         }
 
         state = 1;
+        //初始化 “监控出站数据属性”
         initOutputChanged(ctx);
 
         lastReadTime = lastWriteTime = ticksInNanos();
         if (readerIdleTimeNanos > 0) {
+            // 这里的 schedule 方法会调用 eventLoop 的 schedule 方法，将定时任务添加进队列中
             readerIdleTimeout = schedule(ctx, new ReaderIdleTimeoutTask(ctx),
                     readerIdleTimeNanos, TimeUnit.NANOSECONDS);
         }
@@ -396,7 +398,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
             Channel channel = ctx.channel();
             Unsafe unsafe = channel.unsafe();
             ChannelOutboundBuffer buf = unsafe.outboundBuffer();
-
+            // 记录了出站缓冲区相关的数据，buf 对象的 hash 码，和 buf 的剩余缓冲字节数
             if (buf != null) {
                 lastMessageHashCode = System.identityHashCode(buf.current());
                 lastPendingWriteBytes = buf.totalPendingWriteBytes();
